@@ -76,14 +76,3 @@ def filter_view():
             return
         
 filter_view()
-
-st.expander(
-"""
-# Note - this doesn't actually work because streamlit... https://stackoverflow.com/questions/74968179/session-state-is-reset-in-streamlit-multipage-app
-def set_filtered_df():
-    st.session_state.df = filtered_df
-    st.dataframe(st.session_state.df)
-
-if st.button("Set filtered df as new df"):
-    set_filtered_df()
-""", expanded=False)

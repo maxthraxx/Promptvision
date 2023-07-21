@@ -157,10 +157,10 @@ def process_directory(directory=None, imagereward=None, cleanup=None):
             df["score"] = df["score"].astype("float64")
             df["favorite"] = df["favorite"].astype("bool")
             df["rating"] = df["rating"].astype("int64")
-            print(df)
-            print(df.describe())
-            print(df.columns.to_list())
-            print(df.dtypes)
+            #print(df)
+            #print(df.describe())
+            #print(df.columns.to_list())
+            #print(df.dtypes)
             return df
         except Exception as e:
             print(f"Error while applying astype: {e}")
