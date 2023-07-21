@@ -39,7 +39,7 @@ def index_directory(directory, ire, parser_manager, existing_images, imagereward
     for root, dirs, files in os.walk(directory, topdown=True):
         for file in files:
             if file.endswith(".jpg") or file.endswith(".jpeg") or file.endswith(".png"):
-                image_path = Path(os.path.join(root, file))
+                image_path = Path(root) / file
                 imghash = get_hash(image_path)
 
                 if imghash not in existing_images:
@@ -111,7 +111,7 @@ def process_directory(directory=None, imagereward=None, cleanup=None):
     assert Path(directory).is_dir()
     print(f"Directory --> {directory}")
 
-    if cleanup:
+    if cleanup or imagereward:
         if os.path.exists(Path(os.path.join(directory, "pvision_cache.pkl"))):
             os.remove(Path(os.path.join(directory, "pvision_cache.pkl")))
         print("Cache cleared.")
