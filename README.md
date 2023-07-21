@@ -1,89 +1,51 @@
-# PromptVision
-Promptvision is a web application that allows users to view and browse images. It allows quickly browsing through generations and changing directories in the "web" app. It's running locally using Flask. 
+# PromptvisionNG
 
-![image](https://user-images.githubusercontent.com/20763070/229656587-0a159b8a-cbb2-40d0-a030-82e648886489.png)
+An evolution of the previous Promptvision. Rewritten to use Streamlit for its UI. The backend engine has been rewritten. The performance is much better.
 
-![image](https://user-images.githubusercontent.com/20763070/229390468-bae0b93b-0ccc-4f11-b64b-4e443609a03d.png)
+The external image scoring model has been changed to ImageReward (https://github.com/THUDM/ImageReward) which is a much better one than the previous model used.
 
-- [PromptVision](#promptvision)
-  - [Executable](#executable)
-  - [Installation](#installation)
-      - [Conda](#conda)
-        - [Using aesthetic score](#using-aesthetic-score)
-  - [Usage](#usage)
-  - [Keybinds](#keybinds)
-  - [URL routes](#url-routes)
+## Features
+- ImageReward score scoring of images
+- Rating and favoriting images
+- Filtering your images on all properties:
+	- Prompts
+	- Score
+	- Personal rating
+	- Favorite
+	- Resolution
+- Copying, moving and deletion of images
+- Folder and subfolder navigation (will detect subfolders and enable you to view e.g. all images in a certain folder)
 
-## Executable
-Windows exeuctable can be found under releases: https://github.com/Automaticism/Promptvision/releases/
+## Setup and installation
 
-## Installation
-Here are step-by-step instructions for opening a terminal, navigating to a folder, cloning a Git repository, creating and activating a virtual environment, installing the necessary dependencies, and running a Python script.
+1. `git clone https://github.com/Automaticism/Promptvision.git`
+2. `cd Promptvision`
+3. `conda create -n promptvision`
+4. `conda activate promptvision`
+5. `pip install -r requirements.txt`
+6. `streamlit run Promptvision.py`
+7. `Optionally if you use "Calculate ImageReward score" the ImageReward score will be downloaded. This will look like the following in your console:`
+	- `2023-07-22 00:56:36.538 Created a temporary directory at /var/folders/l5/n6jwr6tn71s_pm5dh926hbdr0000gn/T/tmpqf7yjji1 
+	2023-07-22 00:56:36.538 Writing /var/folders/l5/n6jwr6tn71s_pm5dh926hbdr0000gn/T/tmpqf7yjji1/_remote_module_non_scriptable.py
+	Downloading ImageReward.pt:   1%|▌                                             | 21.0M/1.79G [00:02<02:49, 10.4MB/s]
+	`
 
-#### Conda
-Open up any terminal program (CMD, Windows terminal, Bash, zsh, Powershell).
-Use the cd command to navigate to the "Documents" folder. Type `cd Documents` and press enter.
-Use the git clone command to clone the repository. Type `git clone [repository URL]` and press enter. Replace "[repository URL]" with the URL of the repository you want to clone. For example:
-```
-git clone https://github.com/Automaticism/Promptvision.git
-```
-Use the "cd" command to navigate to the cloned repository. Type cd repository and press enter. Replace "repository" with the name of the cloned repository.
-Create a new conda environment and activate it with the following commands:
-```
-conda create --name myenv
+## Application views
+- `Promptvision.py` the entrypoint of the multi-page Streammlit app (used to launch the program, `streamlit run Promptvision.py`). This page also contains settings for the application. Set the directory which will be used as the main directory. (E.g. open your main image folder and it will index all images and subfolders. You can then browse every subfolder.)
+- `Gallery.py` the gallery view of your images, select one image here and you can look closer in the `Image viewer.py` page
+- `Prompt Explorer.py` is running some Natural Language Processing models generating some statistical information to give insight into prompts (This will be the focus for further development)
+- `Image viewer.py` is the image viewer. Has typical option of navigating your images (next, previous), shows generational information (supports all the UIs via the https://github.com/d3x-at/sd-parsers module), enables you to set your personal rating and set favorite status, also enables you to view the ImageReward score. Rating & favorite can be used when you are filtering your images (e.g. filter all favorites and copy them to a new folder)
 
-conda activate myenv
-```
-These commands will create a new environment named "myenv" and activate it.
+## Bugs and known issues
+- This application is limited by Streamlit in some ways with how things are done the Streamlit way (and I am no Streamlit expert), you will get warnings such as 
+> AttributeError: st.session_state has no attribute "df". Did you forget to initialize it? More info: https://docs.streamlit.io/library/advanced-features/session-state#initialization
 
-Install the necessary dependencies using the following command:
-```
-pip install -r requirements.txt
-```
-This command will install the dependencies listed in the "requirements.txt" file.
+These are typical and will disappear when you set directory and browse the different pages. If they persist and something is broken, create an issue for it.
+- `score` might be 0.0 even after installing ImageReward model and having checked off the "Calculate ImageReward score", simply press "Reset cache" and it will recalc and most likely fix the problem
 
-Finally, run the Python script with the following command, replacing "[your image folder]" with the name of the folder containing your images:
-
-```
-python gallery.py --imagedir "[your image folder]"
-```
-##### Using aesthetic score
-Based on this: https://github.com/AUTOMATIC1111/stable-diffusion-webui/discussions/1831
-See the code in [gallery_engine](gallery_engine.py).
-
-Required extras, this assumes you have setup Nvidia CUDA version 11.8 in this case. Adjust `pytorch-cuda=<version>` according to what you have installed.
-If you have any challenges look at https://pytorch.org/get-started/locally/ to see how you can install it to your specific system.
-
-```
-conda install pytorch torchvision torchaudio pytorch-cuda=11.8 -c pytorch -c nvidia
-pip install ftfy regex tqdm
-pip install git+https://github.com/openai/CLIP.git
-```
-
-```
-python gallery.py --imagedir "[your image folder]" --aesthetic True
-```
-
-This will calculate aestehitc score for all your images. 
-
-## Usage
-Run the application:
-```
-python .\gallery.py --imagedir "F:\stable-diffusion-webui\outputs\txt2img-images\2023-03-21\rpg"
-```
-
-**Note**: on launch it will extract exif data from all images and initialize metadata for all images. It will also create thumbnails. Everything will be placed in a metadata folder in the current working directory. Under this a folder for the <image folder> will be created.
-
-![image](https://user-images.githubusercontent.com/20763070/226762754-72c1254f-890d-4768-ad93-6fa1d3e7f3ac.png)
-
-## Keybinds
-- `s` for save
-- `1 ... 5` for rating
-- `f` for favorite
-- `left` arrow key for previous, `right` arrow key for next
-
-## URL routes
-The following URL routes are available:
-- `/`: Redirects to the image_viewer route with a randomly selected image.
-- `/img/<image_name>`: Goes to image by name e.g. "00250-13343234.png" in your `<image folder>`.
-- `/img/<index>`: Goes to image by index in `<image folder>`. `0` is the first image.
+## Credits
+- ImageReward https://github.com/THUDM/ImageReward
+- Image select for streamlit https://github.com/jrieke/streamlit-image-select
+- Streamlit
+- Streamlit extras
+- sd-parsers https://github.com/d3x-at/sd-parsers
