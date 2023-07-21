@@ -45,7 +45,7 @@ def render_image(container):
                 )
             else:
                 image = Image.open(filename)
-                st.image(image, caption=filename, use_column_width=True) # Use column width to fit the image to the browser window
+                st.image(image, caption=filename) # Use column width to fit the image to the browser window
         with img_view_col2:
             st.caption("Positive prompt")
             st.success(positive_prompt)
@@ -81,7 +81,7 @@ def render_image(container):
             print(st.session_state.my_index)
             st.write(st.session_state.df)
             with subcol1:
-                metricview = st.metric(label="Rating", value=st.session_state.rating)
+                st.metric(label="Rating", value=st.session_state.rating)
 
 
 with st.container():
