@@ -12,27 +12,33 @@ import helper
 
 st.session_state.render_image = False
 
+
 def filter_view():
     st.subheader("Drill down into your currently active images")
-    st.write("This page lets you filter your current images without changing the the view such as filtering in the 'Promptvision' tab. When filtering here you can move, copy and delete the images you have selected.")
+    st.write(
+        "This page lets you filter your current images without changing the the view such as filtering in the 'Promptvision' tab. When filtering here you can move, copy and delete the images you have selected."
+    )
     # Use the filter_dataframe function on your dataframe
     filtered_df = pvision.filter_dataframe(st.session_state.df)
 
     # Display the filtered dataframe
     st.dataframe(filtered_df)
 
-    if st.checkbox("Show filtered images", help=f"This will show the images in your active filter, if you haven't pressed 'add filters' yet, you will not have filtered anything, thus you will see all images in your directory (Current active directory: {st.session_state.directory})"):
+    if st.checkbox(
+        "Show filtered images",
+        help=f"This will show the images in your active filter, if you haven't pressed 'add filters' yet, you will not have filtered anything, thus you will see all images in your directory (Current active directory: {st.session_state.directory})",
+    ):
         images = []
         captions = []
-        for i,row in filtered_df.iterrows():
+        for i, row in filtered_df.iterrows():
             images.append(row.filename)
             captions.append(row.positive_prompt)
 
         img = image_select(
-            label = "Select an image",
-            images = images,
-            captions = captions,
-            return_value = "index",
+            label="Select an image",
+            images=images,
+            captions=captions,
+            return_value="index",
         )
 
     destination = st.text_input("Directory to move/copy images to")
@@ -57,7 +63,9 @@ def filter_view():
             st.session_state.submitted = True
 
         if "submitted" in st.session_state and st.session_state.submitted:
-            st.error("🚨 You are about to delete the images in your filter. Please confirm if this is correct. 🚨")
+            st.error(
+                "🚨 You are about to delete the images in your filter. Please confirm if this is correct. 🚨"
+            )
             confirmation = st.button("Confirm", type="primary")
 
             if confirmation:
@@ -74,5 +82,6 @@ def filter_view():
             helper.reset_cached_images()
             # Return from the function
             return
-        
+
+
 filter_view()

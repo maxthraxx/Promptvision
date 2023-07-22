@@ -16,6 +16,7 @@ import pandas as pd
 import streamlit as st
 import random
 
+
 def get_hash(image):
     hash_digest = hashlib.sha256()
     with open(image, "rb") as f:
@@ -24,15 +25,20 @@ def get_hash(image):
 
     return hash_digest.hexdigest()
 
-class ImageRewardEngine():
+
+class ImageRewardEngine:
     def __init__(self) -> None:
-        import ImageReward as RM 
+        import ImageReward as RM
+
         self.model = RM.load("ImageReward-v1.0")
+
     def score(self, positive_prompt, image):
-            import torch
-            with torch.no_grad():
-                score = self.model.score(positive_prompt, image)
-            return round(score, 3)
+        import torch
+
+        with torch.no_grad():
+            score = self.model.score(positive_prompt, image)
+        return round(score, 3)
+
 
 def index_directory(directory, ire, parser_manager, existing_images, imagereward=False):
     images = {}
@@ -55,7 +61,7 @@ def index_directory(directory, ire, parser_manager, existing_images, imagereward
                         imgscore = ire.score(positive_prompt, image)
                     else:
                         imgscore = 0.0
-                    
+
                     images[imghash] = {
                         "filename": image_path,
                         "width": image.width,
@@ -70,9 +76,16 @@ def index_directory(directory, ire, parser_manager, existing_images, imagereward
                     }
                     print(f"Saved image: {image_path}")
         for subdir in dirs:
-            index_directory(Path(os.path.join(root, subdir)), ire, parser_manager, existing_images, imagereward)
-    
+            index_directory(
+                Path(os.path.join(root, subdir)),
+                ire,
+                parser_manager,
+                existing_images,
+                imagereward,
+            )
+
     return images
+
 
 def get_cached_images(directory):
     index_file = os.path.join(directory, "pvision_cache.pkl")
@@ -87,23 +100,26 @@ def get_cached_images(directory):
 
     return images
 
+
 def cache_images(directory, images):
     with open(os.path.join(directory, "pvision_cache.pkl"), "wb") as f:
         pickle.dump(images, f)
-    
+
+
 def save_df_from_streamlit(directory, df):
-    #print(f"df in to save: {df}")
+    # print(f"df in to save: {df}")
     images = df.set_index("imghash", drop=False).to_dict(orient="index")
-    #print(f"dict from df: {images}")
+    # print(f"dict from df: {images}")
     with open(os.path.join(directory, "pvision_cache.pkl"), "wb") as f:
         pickle.dump(images, f)
+
 
 def process_directory(directory=None, imagereward=None, cleanup=None):
     if imagereward:
         ire = ImageRewardEngine()
     else:
         ire = None
-    
+
     parser_manager = ParserManager(process_items=True)
 
     if directory is None:
@@ -121,7 +137,9 @@ def process_directory(directory=None, imagereward=None, cleanup=None):
         existing_images = get_cached_images(directory)
         print(f"existing_images: {existing_images}")
     # Index the directory and find the new images that are not in the cache
-    images = index_directory(directory, ire, parser_manager, existing_images, imagereward)
+    images = index_directory(
+        directory, ire, parser_manager, existing_images, imagereward
+    )
     new_images = {
         imghash: image
         for imghash, image in images.items()
@@ -137,6 +155,7 @@ def process_directory(directory=None, imagereward=None, cleanup=None):
     images.update(existing_images)
     print(f"Images before creating df: {images}")
     import pandas as pd
+
     # Check if any of the values are NA or inf
     for imghash, image_info in images.items():
         for key, value in image_info.items():
@@ -157,29 +176,33 @@ def process_directory(directory=None, imagereward=None, cleanup=None):
             df["score"] = df["score"].astype("float64")
             df["favorite"] = df["favorite"].astype("bool")
             df["rating"] = df["rating"].astype("int64")
-            #print(df)
-            #print(df.describe())
-            #print(df.columns.to_list())
-            #print(df.dtypes)
+            # print(df)
+            # print(df.describe())
+            # print(df.columns.to_list())
+            # print(df.dtypes)
             return df
         except Exception as e:
             print(f"Error while applying astype: {e}")
     else:
         return pd.DataFrame()
 
+
 def move_images(df, destination):
     for file in df["filename"].tolist():
         new_path = Path(destination) / Path(file).name
         Path(file).rename(new_path)
 
+
 def copy_images(df, destination):
     for file in df["filename"].tolist():
         # Create a new path for the file in the directory
         new_path = Path(destination) / Path(file).name
-        new_path.write_bytes(Path(file).read_bytes())  
+        new_path.write_bytes(Path(file).read_bytes())
+
 
 def delete_images(df):
-    if df.empty: return
+    if df.empty:
+        return
     for file in df["filename"].tolist():
         file_obj = Path(file)
         try:
@@ -190,6 +213,7 @@ def delete_images(df):
         except PermissionError:
             print(f"Permission error: Cannot delete {file}")
 
+
 def delete_images_and_cache(df):
     directory = set()
     for file in df["filename"].tolist():
@@ -199,6 +223,7 @@ def delete_images_and_cache(df):
         file_obj.unlink()
     for cache in directory:
         cache.unlink()
+
 
 # Define the filter_dataframe function (modified from the blog post)
 def filter_dataframe(df: pd.DataFrame) -> pd.DataFrame:
@@ -225,14 +250,14 @@ def filter_dataframe(df: pd.DataFrame) -> pd.DataFrame:
                 # Use a text input instead of a slider
                 user_num_input = right.text_input(
                     f"Value for {column}",
-                    value=df[column].iloc[0] # Use the constant value as default
+                    value=df[column].iloc[0],  # Use the constant value as default
                 )
                 df = df[df[column] == user_num_input]
             else:
                 # Use a slider with a non-zero step
                 _min = float(df[column].min())
                 _max = float(df[column].max())
-                step = max((_max - _min) / 100, 0.01) # Use a minimum step of 0.01
+                step = max((_max - _min) / 100, 0.01)  # Use a minimum step of 0.01
                 user_num_input = right.slider(
                     f"Values for {column}",
                     min_value=_min,
@@ -258,23 +283,35 @@ def filter_dataframe(df: pd.DataFrame) -> pd.DataFrame:
             if column in ["positive_prompt", "negative_prompt", "metadata"]:
                 user_text_input = right.text_input(
                     f"Regex in {column}",
-                    value=".*" # Default value to match all values
+                    value=".*",  # Default value to match all values
                 )
                 if user_text_input:
                     # Use regex=True and case=False to enable case-insensitive regex matching
-                    df = df[df[column].astype(str).str.contains(user_text_input, regex=True, case=False)]
+                    df = df[
+                        df[column]
+                        .astype(str)
+                        .str.contains(user_text_input, regex=True, case=False)
+                    ]
     return df
+
 
 if __name__ == "__main__":
     import argparse
+
     parser = argparse.ArgumentParser()
     parser.add_argument("--cleanup", action="store_true", help="Clear the cache.")
     parser.add_argument("--copydir", action="store_true", help="Copy df to new dest.")
     parser.add_argument("--movedir", action="store_true", help="Move df to new dest.")
     parser.add_argument("--deletedir", action="store_true", help="Delete files in df.")
-    parser.add_argument("--imagereward", action="store_true", help="Enable ImageReward - https://github.com/THUDM/ImageReward.")
+    parser.add_argument(
+        "--imagereward",
+        action="store_true",
+        help="Enable ImageReward - https://github.com/THUDM/ImageReward.",
+    )
     parser.add_argument("--imagedir", help="Path to your images", required=False)
-    parser.add_argument("--destinationdir", help="Path you want moving/copying to", required=False)
+    parser.add_argument(
+        "--destinationdir", help="Path you want moving/copying to", required=False
+    )
 
     args = parser.parse_args()
     if args.imagereward and args.cleanup:
@@ -284,13 +321,15 @@ if __name__ == "__main__":
     elif args.cleanup:
         df = process_directory(directory=args.imagedir, imagereward=False, cleanup=True)
     else:
-        df = process_directory(directory=args.imagedir, imagereward=False, cleanup=False)
+        df = process_directory(
+            directory=args.imagedir, imagereward=False, cleanup=False
+        )
 
     if args.copydir and destinationdir:
         copy_images(df, destinationdir)
 
     if args.movedir and destinationdir:
         move_images(df, destinationdir)
-    
+
     if args.deletedir:
         delete_images(df)
