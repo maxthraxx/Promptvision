@@ -13,7 +13,7 @@ def img_to_bytes(img_path):
 @st.cache_data
 def load_data(directory, cleanup, imagereward=False):
     # Process the directory and create a dataframe of images and their metadata
-    if directory == None:
+    if directory is None:
         st.warning("Enter a directory to view")
         st.stop()
     else:
