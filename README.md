@@ -1,8 +1,9 @@
 # PromptvisionNG
 
-An evolution of the previous Promptvision. Rewritten to use Streamlit for its UI. The backend engine has been rewritten. The performance is much better.
+An evolution of the previous Promptvision. View all your image generations in one place. Browse folder by folder. Filter by your favorite prompts. Regex search specific positive / negative prompts. Get your images scored by a specifically trained scoring model (ImageReward) which enables you to get third-party assessments of your generations. 
+Dive further into the weed with the ability to set favorite status & your personal ratings. All of the fields can then be used when filtering the images you want to watch. This also enables you to copy, move and delete images quickly. 
 
-The external image scoring model has been changed to ImageReward (https://github.com/THUDM/ImageReward) which is a much better one than the previous model used.
+Dive further into your promp engineering analysis by going into the prompt explorer tab where you can run a few natural language prosessing algorithms on your specific fields such as your positive prompts. This can give you insight in what prompts that are most prevalent. You can also combine this with the former discussed filtering so that you can really gain a deeper understanding of your prompts and the end results.
 
 ![ng image viewer](https://github.com/Automaticism/Promptvision/assets/20763070/79cac5a4-7ef7-4bf4-8c35-87aa18bc8171)
 
