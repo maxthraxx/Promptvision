@@ -1,10 +1,7 @@
 import streamlit as st
 import base64
-import pandas as pd
 import pvision
 from pathlib import Path
-from PIL import Image
-from streamlit.errors import StreamlitAPIException
 
 
 def img_to_bytes(img_path):

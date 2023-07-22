@@ -4,17 +4,13 @@ import pickle
 from sdparsers import ParserManager
 import hashlib
 from pathlib import Path
-import shutil
-import numpy as np
 from pandas.api.types import (
-    is_categorical_dtype,
     is_datetime64_any_dtype,
     is_numeric_dtype,
     is_object_dtype,
 )
-import pandas as pd
 import streamlit as st
-import random
+import pandas as pd
 
 
 def get_hash(image):
@@ -243,7 +239,7 @@ def filter_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     # Try to convert datetimes into a standard format (datetime, no timezone)
     to_filter_columns = st.multiselect("Filter dataframe on", df.columns)
     for column in to_filter_columns:
-        left, right = st.columns((1, 20))
+        _, right = st.columns((1, 20))
         if is_numeric_dtype(df[column]):
             # Check if the score column has a constant value
             if df[column].nunique() == 1:
@@ -325,11 +321,11 @@ if __name__ == "__main__":
             directory=args.imagedir, imagereward=False, cleanup=False
         )
 
-    if args.copydir and destinationdir:
-        copy_images(df, destinationdir)
+    if args.copydir and args.destinationdir:
+        copy_images(df, args.destinationdir)
 
-    if args.movedir and destinationdir:
-        move_images(df, destinationdir)
+    if args.movedir and args.destinationdir:
+        move_images(df, args.destinationdir)
 
     if args.deletedir:
         delete_images(df)
