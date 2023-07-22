@@ -1,11 +1,8 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
-from PIL import Image
 import pvision
 from pathlib import Path
 from streamlit.errors import StreamlitAPIException
-import base64
 import helper
 
 st.set_page_config(

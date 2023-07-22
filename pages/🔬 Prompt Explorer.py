@@ -61,7 +61,7 @@ def perform_lda_topic_modeling(df, column, n_topics=10):
         word: dictionary.cfs[word_id] for word, word_id in word_ids_dict.items()
     }
     cloud = WordCloud(
-        width=400, height=300, background_color="white"
+        width=900, height=450, background_color="white"
     ).generate_from_frequencies(word_freqs_dict)
     st.image(cloud.to_array())
 
@@ -104,7 +104,7 @@ def perform_hdp_topic_modeling(df, column, n_topics=10):
         word: dictionary.cfs[word_id] for word, word_id in word_ids_dict.items()
     }
     cloud = WordCloud(
-        width=400, height=300, background_color="white"
+        width=900, height=450, background_color="white"
     ).generate_from_frequencies(word_freqs_dict)
     st.image(cloud.to_array())
 
