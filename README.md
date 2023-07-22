@@ -1,6 +1,13 @@
 # PromptvisionNG
 
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/538da8df1fd74260bc4b783203ee9881)](https://app.codacy.com/gh/Automaticism/Promptvision/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/538da8df1fd74260bc4b783203ee9881)](https://app.codacy.com/gh/Automaticism/Promptvision/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade) ![Platform | MacOS, Windows, Linux](https://img.shields.io/badge/Platform-MacOS%2C%20Windows%2C%20Linux-blue) ![Written with Streamlit](https://img.shields.io/badge/Written%20with-Streamlit-red)
+
+![Supports Automatic1111](https://img.shields.io/badge/Supports-Automatic1111-blue)
+![Supports SD.next](https://img.shields.io/badge/Supports-SD.next-green)
+![Supports ComfyUI](https://img.shields.io/badge/Supports-ComfyUI-yellow)
+![Supports InvokeAI](https://img.shields.io/badge/Supports-InvokeAI-red)
+![Supports NovelAI](https://img.shields.io/badge/Supports-NovelAI-purple)
+
 
 An evolution of the previous Promptvision. View all your image generations in one place. Browse folder by folder. Filter by your favorite prompts. Regex search specific positive / negative prompts. Get your images scored by a specifically trained scoring model (ImageReward) which enables you to get third-party assessments of your generations.
 
