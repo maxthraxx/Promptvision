@@ -14,13 +14,15 @@ helper.store_metadata_in_session(st.session_state.my_index)
 
 
 def set_new_df_value(key, value):
-    #print(f"setting new df values - key:{key} - value:{value}")
+    # print(f"setting new df values - key:{key} - value:{value}")
     st.session_state["df"].loc[st.session_state.my_index, key] = value
     pvision.save_df_from_streamlit(st.session_state.directory, st.session_state.df)
     helper.store_metadata_in_session(st.session_state.my_index)
 
+
 def favorite_render_false():
     set_new_df_value("favorite", True if not st.session_state.favorite else False)
+
 
 def render_image(container):
     helper.store_metadata_in_session(st.session_state.my_index)
@@ -45,7 +47,10 @@ def render_image(container):
                 )
             else:
                 image = Image.open(filename)
-                st.image(image, caption=filename, ) # Use column width to fit the image to the browser window
+                st.image(
+                    image,
+                    caption=filename,
+                )  # Use column width to fit the image to the browser window
         with img_view_col2:
             st.caption("Positive prompt")
             st.success(positive_prompt)
@@ -54,11 +59,13 @@ def render_image(container):
             st.warning(negative_prompt)
             # Score container
             st.metric(label="ImageReward Score", value=score)
-            st.info(f"Currently viewing image {st.session_state.my_index+1} out of {len(st.session_state.df)}")
+            st.info(
+                f"Currently viewing image {st.session_state.my_index+1} out of {len(st.session_state.df)}"
+            )
             # Metadata container
             st.caption("Metadata")
             st.json(metadata)
-    
+
             with st.container():
                 subcol1, subcol2 = st.columns(2)
                 with subcol1:
@@ -66,7 +73,9 @@ def render_image(container):
                     st.write(st.session_state.favorite)
                 with subcol2:
                     if st.session_state.favorite:
-                        favorite = st.button("Unfavorite", on_click=favorite_render_false)
+                        favorite = st.button(
+                            "Unfavorite", on_click=favorite_render_false
+                        )
                     else:
                         favorite = st.button("Favorite", on_click=favorite_render_false)
             subcol1, subcol2 = st.columns(2)
@@ -89,19 +98,26 @@ with st.container():
     col1, col2, col3, col4, col5 = st.columns(5)
     with col2:
         if st.button("Next"):
-            st.session_state.my_index = (st.session_state.my_index + 1) % len(st.session_state["df"]) # Increase the st.session_state.my_index by 1 and wrap around to 0 if it reaches the last index
+            st.session_state.my_index = (st.session_state.my_index + 1) % len(
+                st.session_state["df"]
+            )  # Increase the st.session_state.my_index by 1 and wrap around to 0 if it reaches the last index
             st.session_state.render_image = False
     with col1:
         if st.button("Previous"):
-            st.session_state.my_index = (st.session_state.my_index - 1) % len(st.session_state["df"]) # Decrease the st.session_state.my_index by 1 and wrap around to the last index if it reaches 0
+            st.session_state.my_index = (st.session_state.my_index - 1) % len(
+                st.session_state["df"]
+            )  # Decrease the st.session_state.my_index by 1 and wrap around to the last index if it reaches 0
             st.session_state.render_image = False
     with col3:
-        pass 
+        pass
     with col4:
         if st.button("Gallery"):
             switch_page("gallery")
     with col5:
-        if st.checkbox("Non-wide mode", help="Toggle this to scale the image for smaller screens. Will make viewing non-responsive on large screens."):
+        if st.checkbox(
+            "Non-wide mode",
+            help="Toggle this to scale the image for smaller screens. Will make viewing non-responsive on large screens.",
+        ):
             st.session_state.widemode = False
             st.session_state.render_image = False
         else:
@@ -112,4 +128,3 @@ with st.container():
     if not st.session_state.render_image:
         render_image(image_container)
         st.session_state.render_image = True
-    

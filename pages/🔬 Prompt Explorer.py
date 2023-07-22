@@ -12,6 +12,7 @@ import re
 
 st.session_state.render_image = False
 
+
 def preprocess_text(text):
     # Lowercase the text.
     text = text.lower()
@@ -29,6 +30,7 @@ def preprocess_text(text):
 
     return tokens
 
+
 def perform_lda_topic_modeling(df, column, n_topics=10):
     # Pre-process the text data.
     texts = [preprocess_text(text) for text in df[column]]
@@ -44,7 +46,9 @@ def perform_lda_topic_modeling(df, column, n_topics=10):
 
     # Print the topics in the model.
     st.write("LDA Topics:")
-    for topic_id, topic in model.show_topics(num_topics=n_topics, num_words=10, formatted=False):
+    for topic_id, topic in model.show_topics(
+        num_topics=n_topics, num_words=10, formatted=False
+    ):
         topic_words = [term for term, prob in topic]
         st.write(f"Topic {topic_id + 1}: {' '.join(topic_words)}")
 
@@ -72,6 +76,7 @@ def perform_lda_topic_modeling(df, column, n_topics=10):
         ax.set_xlabel("Probability")
         ax.set_title(f"Topic {topic_id + 1}")
         st.pyplot(fig)
+
 
 def perform_hdp_topic_modeling(df, column, n_topics=10):
     # Pre-process the text data.
@@ -114,6 +119,7 @@ def perform_hdp_topic_modeling(df, column, n_topics=10):
         ax.set_title(f"Topic {topic_id + 1}")
         st.pyplot(fig)
 
+
 # Example usage
 column = st.selectbox("Select a column to analyze:", st.session_state.df.columns)
 model_type = st.selectbox("Select a model type:", ["lda", "hdp"])
@@ -122,7 +128,7 @@ if model_type == "lda":
     n_topics = st.slider("Select the number of topics:", 1, 20, 10)
     perform_lda_topic_modeling(st.session_state.df, column, n_topics=n_topics)
 elif model_type == "hdp":
-	n_topics = st.slider("Select the number of topics:", 1, 20, 10)
-	perform_hdp_topic_modeling(st.session_state.df, column, n_topics=n_topics)
+    n_topics = st.slider("Select the number of topics:", 1, 20, 10)
+    perform_hdp_topic_modeling(st.session_state.df, column, n_topics=n_topics)
 else:
     st.write("Invalid model type selected.")
