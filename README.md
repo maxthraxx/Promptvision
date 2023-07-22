@@ -4,6 +4,16 @@ An evolution of the previous Promptvision. Rewritten to use Streamlit for its UI
 
 The external image scoring model has been changed to ImageReward (https://github.com/THUDM/ImageReward) which is a much better one than the previous model used.
 
+![ng image viewer](https://github.com/Automaticism/Promptvision/assets/20763070/79cac5a4-7ef7-4bf4-8c35-87aa18bc8171)
+
+![ng image explorer](https://github.com/Automaticism/Promptvision/assets/20763070/0998671a-e22d-4bfc-aa60-d2a6675d9f7b)
+
+![ng prompt explorer](https://github.com/Automaticism/Promptvision/assets/20763070/70c66449-941c-4189-b083-46b6cf72193f)
+
+![ng gallery view](https://github.com/Automaticism/Promptvision/assets/20763070/3cf84019-bead-4740-a446-e1b08499265d)
+
+![ng settings view](https://github.com/Automaticism/Promptvision/assets/20763070/dc30882d-d110-451e-856b-5304a9312bc6)
+
 ## Features
 - ImageReward score scoring of images
 - Rating and favoriting images
