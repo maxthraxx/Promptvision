@@ -1,4 +1,5 @@
 # PromptvisionNG
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/538da8df1fd74260bc4b783203ee9881)](https://app.codacy.com/gh/Automaticism/Promptvision/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 
 An evolution of the previous Promptvision. View all your image generations in one place. Browse folder by folder. Filter by your favorite prompts. Regex search specific positive / negative prompts. Get your images scored by a specifically trained scoring model (ImageReward) which enables you to get third-party assessments of your generations.
 
