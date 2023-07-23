@@ -8,4 +8,5 @@ Pillow
 ftfy 
 tqdm
 regex
+wordcloud
 git+https://github.com/openai/CLIP.git
