@@ -53,6 +53,7 @@ def index_directory(directory, ire, parser_manager, existing_images, imagereward
                         metdata = exif.metadata
                     except AttributeError as e:
                         print(e)
+                        continue
                     if imagereward:
                         imgscore = ire.score(positive_prompt, image)
                     else:
