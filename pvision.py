@@ -30,7 +30,6 @@ class ImageRewardEngine:
 
     def score(self, positive_prompt, image):
         import torch
-
         with torch.no_grad():
             score = self.model.score(positive_prompt, image)
         return round(score, 3)
@@ -49,11 +48,16 @@ def index_directory(directory, ire, parser_manager, existing_images, imagereward
                     exif = parser_manager.parse(image)
                     try:
                         positive_prompt = exif.prompts[0][0].value
+                    except AttributeError:
+                        positive_prompt = "No positive prompt found"
+                    try:
                         negative_prompt = exif.prompts[0][1].value
-                        metdata = exif.metadata
-                    except AttributeError as e:
-                        print(e)
-                        continue
+                    except AttributeError:
+                        negative_prompt = "No negative prompt found"
+                    try:
+                        metadata = exif.metadata
+                    except AttributeError:
+                        metadata = "No metadata found"
                     if imagereward:
                         imgscore = ire.score(positive_prompt, image)
                     else:
@@ -65,7 +69,7 @@ def index_directory(directory, ire, parser_manager, existing_images, imagereward
                         "height": image.height,
                         "positive_prompt": positive_prompt,
                         "negative_prompt": negative_prompt,
-                        "metadata": metdata,
+                        "metadata": metadata,
                         "imghash": imghash,
                         "score": imgscore,
                         "favorite": False,
@@ -151,7 +155,6 @@ def process_directory(directory=None, imagereward=None, cleanup=None):
     images.update(new_images)
     images.update(existing_images)
     print(f"Images before creating df: {images}")
-    import pandas as pd
 
     # Check if any of the values are NA or inf
     for imghash, image_info in images.items():

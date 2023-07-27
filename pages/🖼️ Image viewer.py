@@ -64,7 +64,7 @@ def render_image(container):
             )
             # Metadata container
             st.caption("Metadata")
-            st.json(metadata)
+            st.write(metadata)
 
             with st.container():
                 subcol1, subcol2 = st.columns(2)
