@@ -11,6 +11,10 @@ from pandas.api.types import (
 )
 import streamlit as st
 import pandas as pd
+import simple_logger
+
+# Create a logger object using the create_logger function
+logger = simple_logger.create_logger("pvision_logger")
 
 
 def get_hash(image):
@@ -30,6 +34,7 @@ class ImageRewardEngine:
 
     def score(self, positive_prompt, image):
         import torch
+
         with torch.no_grad():
             score = self.model.score(positive_prompt, image)
         return round(score, 3)
@@ -55,9 +60,15 @@ def index_directory(directory, ire, parser_manager, existing_images, imagereward
                     except AttributeError:
                         negative_prompt = "No negative prompt found"
                     try:
-                        metadata = exif.metadata
+                        if "ComfyUI" == exif.generator:
+                            logger.debug(exif.generator)
+                            logger.debug(exif.raw_params["prompt"])
+                            logger.debug(exif.raw_params["workflow"])
+                            metadata = exif.raw_params
+                        else:
+                            metadata = exif.metadata
                     except AttributeError:
-                        metadata = "No metadata found"
+                        metadata = {"metadata": "No metadata found"}
                     if imagereward:
                         imgscore = ire.score(positive_prompt, image)
                     else:
@@ -75,7 +86,7 @@ def index_directory(directory, ire, parser_manager, existing_images, imagereward
                         "favorite": False,
                         "rating": 0,
                     }
-                    print(f"Saved image: {image_path}")
+                    logger.debug(f"Saved image: {image_path}")
         for subdir in dirs:
             index_directory(
                 Path(os.path.join(root, subdir)),
@@ -108,9 +119,9 @@ def cache_images(directory, images):
 
 
 def save_df_from_streamlit(directory, df):
-    # print(f"df in to save: {df}")
+    # logger.debug(f"df in to save: {df}")
     images = df.set_index("imghash", drop=False).to_dict(orient="index")
-    # print(f"dict from df: {images}")
+    # logger.debug(f"dict from df: {images}")
     with open(os.path.join(directory, "pvision_cache.pkl"), "wb") as f:
         pickle.dump(images, f)
 
@@ -126,17 +137,17 @@ def process_directory(directory=None, imagereward=None, cleanup=None):
     if directory is None:
         directory = args.imagedir
     assert Path(directory).is_dir()
-    print(f"Directory --> {directory}")
+    logger.debug(f"Directory --> {directory}")
 
     if cleanup or imagereward:
         if os.path.exists(Path(os.path.join(directory, "pvision_cache.pkl"))):
             os.remove(Path(os.path.join(directory, "pvision_cache.pkl")))
-        print("Cache cleared.")
+        logger.debug("Cache cleared.")
         existing_images = []
     else:
         # Load the existing images from the cache first
         existing_images = get_cached_images(directory)
-        print(f"existing_images: {existing_images}")
+        logger.debug(f"existing_images: {existing_images}")
     # Index the directory and find the new images that are not in the cache
     images = index_directory(
         directory, ire, parser_manager, existing_images, imagereward
@@ -150,17 +161,17 @@ def process_directory(directory=None, imagereward=None, cleanup=None):
     # Process the new images and update the cache
     if new_images:
         cache_images(directory, new_images)
-        print(f"new_images: {new_images}")
+        logger.debug(f"new_images: {new_images}")
 
     images.update(new_images)
     images.update(existing_images)
-    print(f"Images before creating df: {images}")
+    logger.debug(f"Images before creating df: {images}")
 
     # Check if any of the values are NA or inf
     for imghash, image_info in images.items():
         for key, value in image_info.items():
             if pd.isna(value):
-                print(f"Invalid value {value} for {key} in image {imghash}")
+                logger.debug(f"Invalid value {value} for {key} in image {imghash}")
     # Create the dataframe from the images dictionary
     df = pd.DataFrame.from_dict(images, orient="index").reset_index(drop=True)
     if not df.empty:
@@ -176,13 +187,13 @@ def process_directory(directory=None, imagereward=None, cleanup=None):
             df["score"] = df["score"].astype("float64")
             df["favorite"] = df["favorite"].astype("bool")
             df["rating"] = df["rating"].astype("int64")
-            # print(df)
-            # print(df.describe())
-            # print(df.columns.to_list())
-            # print(df.dtypes)
+            # logger.debug(df)
+            # logger.debug(df.describe())
+            # logger.debug(df.columns.to_list())
+            # logger.debug(df.dtypes)
             return df
         except Exception as e:
-            print(f"Error while applying astype: {e}")
+            logger.debug(f"Error while applying astype: {e}")
     else:
         return pd.DataFrame()
 
@@ -207,11 +218,11 @@ def delete_images(df):
         file_obj = Path(file)
         try:
             file_obj.unlink()
-            print(f"Deleted: {file}")
+            logger.debug(f"Deleted: {file}")
         except FileNotFoundError:
-            print(f"File not found: {file}")
+            logger.debug(f"File not found: {file}")
         except PermissionError:
-            print(f"Permission error: Cannot delete {file}")
+            logger.debug(f"Permission error: Cannot delete {file}")
 
 
 def delete_images_and_cache(df):
