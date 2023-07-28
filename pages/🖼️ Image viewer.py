@@ -62,9 +62,6 @@ def render_image(container):
             st.info(
                 f"Currently viewing image {st.session_state.my_index+1} out of {len(st.session_state.df)}"
             )
-            # Metadata container
-            st.caption("Metadata")
-            st.write(metadata)
 
             with st.container():
                 subcol1, subcol2 = st.columns(2)
@@ -89,6 +86,10 @@ def render_image(container):
                             set_new_df_value("rating", 0)
             with subcol1:
                 st.metric(label="Rating", value=st.session_state.rating)
+
+            # Metadata container
+            st.caption("Metadata")
+            st.json(metadata)
 
 
 with st.container():
