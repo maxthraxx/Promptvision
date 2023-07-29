@@ -1,5 +1,5 @@
 import os
-from PIL import Image
+from PIL import Image, ExifTags
 import pickle
 from sdparsers import ParserManager
 import hashlib
@@ -12,9 +12,17 @@ from pandas.api.types import (
 import streamlit as st
 import pandas as pd
 import simple_logger
+import json
 
 # Create a logger object using the create_logger function
 logger = simple_logger.create_logger("pvision_logger")
+
+IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png"}
+DEFAULT_PROMPT = "None"
+DEFAULT_METADATA = "None"
+PROMPT_FIELD = "1337"
+POSITIVE_PROMPT_FIELD = "positive_prompt"
+NEGATIVE_PROMPT_FIELD = "negative_prompt"
 
 
 def get_hash(image):
@@ -44,31 +52,18 @@ def index_directory(directory, ire, parser_manager, existing_images, imagereward
     images = {}
     for root, dirs, files in os.walk(directory, topdown=True):
         for file in files:
-            if file.endswith(".jpg") or file.endswith(".jpeg") or file.endswith(".png"):
-                image_path = Path(root) / file
+            if file.lower().endswith(tuple(IMAGE_EXTENSIONS)):
+                image_path = os.path.join(root, file)
                 imghash = get_hash(image_path)
-
                 if imghash not in existing_images:
                     image = Image.open(image_path)
+                    logger.debug(image_path)
+
                     exif = parser_manager.parse(image)
-                    try:
-                        positive_prompt = exif.prompts[0][0].value
-                    except AttributeError:
-                        positive_prompt = "No positive prompt found"
-                    try:
-                        negative_prompt = exif.prompts[0][1].value
-                    except AttributeError:
-                        negative_prompt = "No negative prompt found"
-                    try:
-                        if "ComfyUI" == exif.generator:
-                            logger.debug(exif.generator)
-                            logger.debug(exif.raw_params["prompt"])
-                            logger.debug(exif.raw_params["workflow"])
-                            metadata = exif.raw_params
-                        else:
-                            metadata = exif.metadata
-                    except AttributeError:
-                        metadata = {"metadata": "No metadata found"}
+                    logger.debug(exif)
+
+                    metadata, positive_prompt, negative_prompt = extract_metadata_and_prompts(exif, image)
+
                     if imagereward:
                         imgscore = ire.score(positive_prompt, image)
                     else:
@@ -87,9 +82,10 @@ def index_directory(directory, ire, parser_manager, existing_images, imagereward
                         "rating": 0,
                     }
                     logger.debug(f"Saved image: {image_path}")
+
         for subdir in dirs:
             index_directory(
-                Path(os.path.join(root, subdir)),
+                os.path.join(root, subdir),
                 ire,
                 parser_manager,
                 existing_images,
@@ -97,6 +93,51 @@ def index_directory(directory, ire, parser_manager, existing_images, imagereward
             )
 
     return images
+
+
+def extract_metadata_and_prompts(exif, image):
+    metadata = DEFAULT_METADATA
+    positive_prompt = DEFAULT_PROMPT
+    negative_prompt = DEFAULT_PROMPT
+
+    if exif:
+        try:
+            if "ComfyUI" == exif.generator:
+                logger.debug(exif.raw_params["prompt"])
+                logger.debug(exif.raw_params["workflow"])
+                metadata = exif.raw_params
+                parsed_prompt = json.loads(metadata["prompt"])
+                positive_prompt = parsed_prompt.get(PROMPT_FIELD, {}).get(POSITIVE_PROMPT_FIELD)
+                negative_prompt = parsed_prompt.get(PROMPT_FIELD, {}).get(NEGATIVE_PROMPT_FIELD)
+            else:
+                metadata = exif.metadata
+                try:
+                    logger.debug(exif.prompts)
+                    logger.debug(exif.image_path)
+                    positive_prompt = exif.prompts[0][0].value
+                except (AttributeError, IndexError):
+                    positive_prompt = "No positive prompt found"
+                try:
+                    negative_prompt = exif.prompts[0][1].value
+                except (AttributeError, IndexError):
+                    negative_prompt = "No negative prompt found"
+            logger.debug(metadata)
+        except AttributeError:
+            metadata = {"metadata": "No metadata found"}
+    else:
+        # Read exif data custom (tested on ComfyUI API generated images)
+        img_exif = image.info
+        logger.debug(img_exif)
+        if img_exif is None:
+            logger.debug("Sorry, image has no exif data.")
+        else:
+            metadata = img_exif
+            # Accessing the "prompt" field and extracting the "positive_prompt" and "negative_prompt"
+            parsed_prompt = json.loads(metadata["prompt"])
+            positive_prompt = parsed_prompt.get(PROMPT_FIELD, {}).get(POSITIVE_PROMPT_FIELD)
+            negative_prompt = parsed_prompt.get(PROMPT_FIELD, {}).get(NEGATIVE_PROMPT_FIELD)
+
+    return metadata, positive_prompt, negative_prompt
 
 
 def get_cached_images(directory):

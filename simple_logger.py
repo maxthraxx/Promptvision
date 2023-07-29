@@ -13,7 +13,7 @@ def create_logger(name):
     console_handler = logging.StreamHandler()
 
     # Create a formatter for the handler
-    formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(funcName)s - %(lineno)d - %(message)s")
+    formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(funcName)s - line:%(lineno)d - %(message)s")
 
     # Set the formatter for the handler
     console_handler.setFormatter(formatter)
