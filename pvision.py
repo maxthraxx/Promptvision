@@ -55,9 +55,13 @@ def index_directory(directory, ire, parser_manager, existing_images, imagereward
                         positive_prompt = exif.prompts[0][0].value
                     except AttributeError:
                         positive_prompt = "No positive prompt found"
+                    except IndexError:
+                        positive_prompt = "No positive prompt found"
                     try:
                         negative_prompt = exif.prompts[0][1].value
                     except AttributeError:
+                        negative_prompt = "No negative prompt found"
+                    except IndexError:
                         negative_prompt = "No negative prompt found"
                     try:
                         if "ComfyUI" == exif.generator:
