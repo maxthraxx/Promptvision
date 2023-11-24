@@ -33,7 +33,7 @@ def preprocess_text(text):
 
 def perform_lda_topic_modeling(df, column, n_topics=10):
     # Pre-process the text data.
-    texts = [preprocess_text(text) for text in df[column]]
+    texts = [preprocess_text(str(text)) for text in df[column]]
 
     # Create a dictionary from the text data.
     dictionary = Dictionary(texts)
