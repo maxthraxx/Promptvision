@@ -112,7 +112,7 @@ with st.container():
             )  # Decrease the st.session_state.my_index by 1 and wrap around to the last index if it reaches 0
             st.session_state.render_image = False
     with col3:
-        image_jump_index = st.number_input("View image number: ", min_value=1, max_value=len(st.session_state.df) - 1,
+        image_jump_index = st.number_input("View image number: ", min_value=0, max_value=len(st.session_state.df) - 1,
                                            value=st.session_state.my_index)
         if image_jump_index:
             st.session_state.my_index = image_jump_index
