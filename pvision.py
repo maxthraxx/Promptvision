@@ -85,7 +85,6 @@ def index_directory(directory, ire, parser_manager, existing_images, imagereward
     images = {}
     image_tasks = []
 
-<<<<<<< HEAD
     with ThreadPoolExecutor(max_workers=50) as executor:
         for root, dirs, files in os.walk(directory, topdown=True):
             for file in files:
@@ -94,37 +93,6 @@ def index_directory(directory, ire, parser_manager, existing_images, imagereward
                     imghash = get_hash(image_path)
                     if imghash not in existing_images:
                         image_tasks.append(executor.submit(process_image, image_path, imghash, ire, parser_manager, existing_images, imagereward))
-=======
-                if imghash not in existing_images:
-                    image = Image.open(image_path)
-                    exif = parser_manager.parse(image)
-                    try:
-                        positive_prompt = exif.prompts[0][0].value
-                    except AttributeError:
-                        positive_prompt = "No positive prompt found"
-                    except IndexError:
-                        positive_prompt = "No positive prompt found"
-                    try:
-                        negative_prompt = exif.prompts[0][1].value
-                    except AttributeError:
-                        negative_prompt = "No negative prompt found"
-                    except IndexError:
-                        negative_prompt = "No negative prompt found"
-                    try:
-                        if "ComfyUI" == exif.generator:
-                            logger.debug(exif.generator)
-                            logger.debug(exif.raw_params["prompt"])
-                            logger.debug(exif.raw_params["workflow"])
-                            metadata = exif.raw_params
-                        else:
-                            metadata = exif.metadata
-                    except AttributeError:
-                        metadata = {"metadata": "No metadata found"}
-                    if imagereward:
-                        imgscore = ire.score(positive_prompt, image)
-                    else:
-                        imgscore = 0.0
->>>>>>> main
 
             for subdir in dirs:
                 # Process subdirectories concurrently
