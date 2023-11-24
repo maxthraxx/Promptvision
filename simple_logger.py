@@ -11,7 +11,7 @@ def create_logger(name, log_dir='log', max_size_mb=100, console_output=False):
     logger = logging.getLogger(name)
 
     # Set the level of the logger (DEBUG, INFO, WARNING, ERROR, CRITICAL)
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.WARNING)
 
     # Create a handler for rotating file
     file_path = os.path.join(log_dir, f'{name}.log')
