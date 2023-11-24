@@ -12,3 +12,4 @@ build
 hook-multiprocessing.py
 .toml
 .idea
+log
