@@ -61,7 +61,7 @@ def render_image(container):
             # Score container
             st.metric(label="ImageReward Score", value=score)
             st.info(
-                f"Currently viewing image {st.session_state.my_index+1} out of {len(st.session_state.df)}"
+                f"Currently viewing image {st.session_state.my_index} out of {len(st.session_state.df)} in directory: {st.session_state.directory}"
             )
 
             with st.container():
@@ -88,6 +88,7 @@ def render_image(container):
             with subcol1:
                 st.metric(label="Rating", value=st.session_state.rating)
 
+
             # Metadata container
             st.caption("Metadata")
             st.json(metadata)
@@ -111,7 +112,10 @@ with st.container():
             )  # Decrease the st.session_state.my_index by 1 and wrap around to the last index if it reaches 0
             st.session_state.render_image = False
     with col3:
-        pass
+        image_jump_index = st.number_input("View image number: ", min_value=1, max_value=len(st.session_state.df) - 1,
+                                           value=st.session_state.my_index)
+        if image_jump_index:
+            st.session_state.my_index = image_jump_index
     with col4:
         if st.button("Gallery"):
             switch_page("gallery")

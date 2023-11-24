@@ -20,7 +20,7 @@ def load_data(directory, cleanup, imagereward=False):
         df = pvision.process_directory(
             directory=directory, cleanup=cleanup, imagereward=imagereward
         )
-    return df
+        return df
 
 
 def set_directory(cleanup=False, imagereward=False):
@@ -40,6 +40,7 @@ def reset_cached_images():
 
 
 def store_metadata_in_session(index):
+    pvision.logger.debug(st.session_state["df"].loc[index])
     # Store the image and its metadata in the session state
     st.session_state["filename"] = st.session_state["df"].loc[index, "filename"]
     st.session_state["width"] = st.session_state["df"].loc[index, "width"]

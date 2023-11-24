@@ -13,6 +13,7 @@ import streamlit as st
 import pandas as pd
 import simple_logger
 import json
+from concurrent.futures import ThreadPoolExecutor
 
 # Create a logger object using the create_logger function
 logger = simple_logger.create_logger("pvision_logger")
@@ -53,49 +54,61 @@ class ImageRewardEngine:
         return round(score, 3)
 
 
+def process_image(image_path, imghash, ire, parser_manager, existing_images, imagereward):
+    image = Image.open(image_path)
+    logger.debug(image_path)
+
+    exif = parser_manager.parse(image)
+    logger.debug(exif)
+
+    metadata, positive_prompt, negative_prompt = extract_metadata_and_prompts(exif, image)
+
+    if imagereward:
+        imgscore = ire.score(positive_prompt, image)
+    else:
+        imgscore = 0.0
+
+    return imghash, {
+        "filename": image_path,
+        "width": image.width,
+        "height": image.height,
+        "positive_prompt": positive_prompt,
+        "negative_prompt": negative_prompt,
+        "metadata": metadata,
+        "imghash": imghash,
+        "score": imgscore,
+        "favorite": False,
+        "rating": 0,
+    }
+
 def index_directory(directory, ire, parser_manager, existing_images, imagereward=False):
     images = {}
-    for root, dirs, files in os.walk(directory, topdown=True):
-        for file in files:
-            if file.lower().endswith(tuple(IMAGE_EXTENSIONS)):
-                image_path = os.path.join(root, file)
-                imghash = get_hash(image_path)
-                if imghash not in existing_images:
-                    image = Image.open(image_path)
-                    logger.debug(image_path)
+    image_tasks = []
 
-                    exif = parser_manager.parse(image)
-                    logger.debug(exif)
+    with ThreadPoolExecutor(max_workers=50) as executor:
+        for root, dirs, files in os.walk(directory, topdown=True):
+            for file in files:
+                if file.lower().endswith(tuple(IMAGE_EXTENSIONS)):
+                    image_path = os.path.join(root, file)
+                    imghash = get_hash(image_path)
+                    if imghash not in existing_images:
+                        image_tasks.append(executor.submit(process_image, image_path, imghash, ire, parser_manager, existing_images, imagereward))
 
-                    metadata, positive_prompt, negative_prompt = extract_metadata_and_prompts(exif, image)
+            for subdir in dirs:
+                # Process subdirectories concurrently
+                subdir_path = os.path.join(root, subdir)
+                image_tasks.append(executor.submit(index_directory, subdir_path, ire, parser_manager, existing_images, imagereward))
 
-                    if imagereward:
-                        imgscore = ire.score(positive_prompt, image)
-                    else:
-                        imgscore = 0.0
-
-                    images[imghash] = {
-                        "filename": image_path,
-                        "width": image.width,
-                        "height": image.height,
-                        "positive_prompt": positive_prompt,
-                        "negative_prompt": negative_prompt,
-                        "metadata": metadata,
-                        "imghash": imghash,
-                        "score": imgscore,
-                        "favorite": False,
-                        "rating": 0,
-                    }
-                    logger.debug(f"Saved image: {image_path}")
-
-        for subdir in dirs:
-            index_directory(
-                os.path.join(root, subdir),
-                ire,
-                parser_manager,
-                existing_images,
-                imagereward,
-            )
+    # Wait for all tasks to complete
+    for future in image_tasks:
+        try:
+            result = future.result()
+            if result:
+                imghash, result_dict = result
+                images[imghash] = result_dict
+                logger.debug(f"Saved image: {result_dict['filename']}")
+        except Exception as e:
+            logger.error(f"Error processing image: {e}")
 
     return images
 
@@ -116,16 +129,15 @@ def extract_metadata_and_prompts(exif, image):
                 negative_prompt = parsed_prompt.get(PROMPT_FIELD, {}).get(NEGATIVE_PROMPT_FIELD)
             else:
                 metadata = exif.metadata
-                try:
-                    logger.debug(exif.prompts)
-                    logger.debug(exif.image_path)
-                    positive_prompt = exif.prompts[0][0].value
-                except (AttributeError, IndexError):
-                    positive_prompt = "No positive prompt found"
-                try:
-                    negative_prompt = exif.prompts[0][1].value
-                except (AttributeError, IndexError):
-                    negative_prompt = "No negative prompt found"
+                for prompt, n_prompt in exif.prompts:
+                    if prompt:
+                        positive_prompt = prompt.value
+                    else:
+                        positive_prompt = "No positive prompt found"
+                    if n_prompt:
+                        negative_prompt = n_prompt.value
+                    else:
+                        negative_prompt = "No negative prompt found"
             logger.debug(metadata)
         except AttributeError:
             metadata = {"metadata": "No metadata found"}
@@ -138,7 +150,11 @@ def extract_metadata_and_prompts(exif, image):
         else:
             metadata = img_exif
             # Accessing the "prompt" field and extracting the "positive_prompt" and "negative_prompt"
-            parsed_prompt = json.loads(metadata["prompt"])
+            try:
+                parsed_prompt = json.loads(metadata["prompt"])
+            except KeyError as e:
+                logger.error(e)
+                parsed_prompt = {}
             positive_prompt = parsed_prompt.get(PROMPT_FIELD, {}).get(POSITIVE_PROMPT_FIELD)
             negative_prompt = parsed_prompt.get(PROMPT_FIELD, {}).get(NEGATIVE_PROMPT_FIELD)
 
@@ -173,76 +189,66 @@ def save_df_from_streamlit(directory, df):
 
 
 def process_directory(directory=None, imagereward=None, cleanup=None):
-    if imagereward:
-        ire = ImageRewardEngine()
-    else:
-        ire = None
-
+    ire = ImageRewardEngine() if imagereward else None
     parser_manager = ParserManager(process_items=True)
 
-    if directory is None:
-        directory = args.imagedir
-    assert Path(directory).is_dir()
+    # Handle directory
+    assert Path(directory).is_dir(), f"Invalid directory: {directory}"
     logger.debug(f"Directory --> {directory}")
 
+    # Handle cache
     if cleanup or imagereward:
-        if os.path.exists(Path(os.path.join(directory, "pvision_cache.pkl"))):
-            os.remove(Path(os.path.join(directory, "pvision_cache.pkl")))
-        logger.debug("Cache cleared.")
+        cache_path = Path(directory) / "pvision_cache.pkl"
+        if cache_path.exists():
+            os.remove(cache_path)
+            logger.debug("Cache cleared.")
         existing_images = []
     else:
-        # Load the existing images from the cache first
         existing_images = get_cached_images(directory)
-        logger.debug(f"existing_images: {existing_images}")
-    # Index the directory and find the new images that are not in the cache
-    images = index_directory(
-        directory, ire, parser_manager, existing_images, imagereward
-    )
-    new_images = {
-        imghash: image
-        for imghash, image in images.items()
-        if imghash not in existing_images
-    }
+        logger.debug(f"Existing images: {len(existing_images)}")
 
-    # Process the new images and update the cache
-    if new_images:
-        cache_images(directory, new_images)
-        logger.debug(f"new_images: {new_images}")
+    # Index and process new images
+    images = index_and_process(directory, ire, parser_manager, existing_images, imagereward)
 
+    # Update cache
+    if images:
+        cache_images(directory, images)
+        logger.debug(f"New images: {images}")
+
+    # Create DataFrame
+    try:
+        df = create_dataframe(images)
+        return df if not df.empty else pd.DataFrame()
+    except Exception as e:
+        logger.error(f"Error creating DataFrame: {e}")
+        return pd.DataFrame()
+
+def index_and_process(directory, ire, parser_manager, existing_images, imagereward):
+    images = index_directory(directory, ire, parser_manager, existing_images, imagereward)
+    new_images = {imghash: image for imghash, image in images.items() if imghash not in existing_images}
     images.update(new_images)
     images.update(existing_images)
     logger.debug(f"Images before creating df: {len(images)}")
+    return images
 
-    # Check if any of the values are NA or inf
-    for imghash, image_info in images.items():
-        for key, value in image_info.items():
-            if pd.isna(value):
-                logger.debug(f"Invalid value {value} for {key} in image {imghash}")
-    # Create the dataframe from the images dictionary
+def create_dataframe(images):
     df = pd.DataFrame.from_dict(images, orient="index").reset_index(drop=True)
     if not df.empty:
-        # Set the datatypes for the columns
-        try:
-            df["filename"] = df["filename"].astype("str")
-            df["width"] = df["width"].astype("int64")
-            df["height"] = df["height"].astype("int64")
-            df["positive_prompt"] = df["positive_prompt"].astype("str")
-            df["negative_prompt"] = df["negative_prompt"].astype("str")
-            df["metadata"] = df["metadata"].astype("str")
-            df["imghash"] = df["imghash"].astype("str")
-            df["score"] = df["score"].astype("float64")
-            df["favorite"] = df["favorite"].astype("bool")
-            df["rating"] = df["rating"].astype("int64")
-            # logger.debug(df)
-            # logger.debug(df.describe())
-            # logger.debug(df.columns.to_list())
-            # logger.debug(df.dtypes)
-            return df
-        except Exception as e:
-            logger.debug(f"Error while applying astype: {e}")
-    else:
-        return pd.DataFrame()
+        df = preprocess_dataframe(df)
+    return df
 
+def preprocess_dataframe(df):
+    df["filename"] = df["filename"].astype("str")
+    df["width"] = df["width"].astype("int64")
+    df["height"] = df["height"].astype("int64")
+    df["positive_prompt"] = df["positive_prompt"].astype("str").replace('None', '')
+    df["negative_prompt"] = df["negative_prompt"].astype("str").replace('None', '')
+    df["metadata"] = df["metadata"].astype("str")
+    df["imghash"] = df["imghash"].astype("str")
+    df["score"] = df["score"].astype("float64")
+    df["favorite"] = df["favorite"].astype("bool")
+    df["rating"] = df["rating"].astype("int64")
+    return df
 
 def move_images(df, destination):
     for file in df["filename"].tolist():

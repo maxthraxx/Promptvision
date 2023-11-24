@@ -46,15 +46,14 @@ with main_container:
             st.session_state.imagereward_check = imagereward_check
             if dir_submitted and imagereward_check:
                 helper.set_directory(imagereward=st.session_state.imagereward_check)
+                st.session_state.original_df = getattr(st.session_state, "df", None)
             else:
                 helper.set_directory(imagereward=st.session_state.imagereward_check)
+                st.session_state.original_df = getattr(st.session_state, "df", None)
             st.session_state.my_index = 0
 
     if st.checkbox("Filter dataset"):
         # Define the filter_dataframe function (modified from the blog post)
-        if "original_df" not in st.session_state:
-            st.session_state.original_df = st.session_state["df"].copy()
-
         st.session_state["df"] = pvision.filter_dataframe(st.session_state.original_df)
         st.session_state.my_index = 0
 
@@ -73,6 +72,8 @@ with main_container:
         # Convert to list and append the current directory if not in the list
         directories = list(directories)
         if st.session_state.directory not in directories:
+            if "original_directory" not in st.session_state:
+                st.session_state.original_directory = st.session_state.directory
             directories += [st.session_state.directory]
 
         # Store the directories in a session state object
@@ -80,22 +81,24 @@ with main_container:
             st.session_state.directories = directories
 
         # Add a multiselect widget to filter by directory
-        selected_dir = st.selectbox("Filter by directory", st.session_state.directories)
+        selected_dir = st.selectbox("Filter by directory", st.session_state.directories, index=None)
 
         # Check if any directory is selected
         if selected_dir:
             # Filter the dataframe by the selected directories
-            st.session_state["df"] = helper.load_data(
-                selected_dir,
-                cleanup=False,
-                imagereward=st.session_state.imagereward_check,
-            )
+            st.session_state.directory = selected_dir
+            helper.set_directory(cleanup=False, imagereward=st.session_state.imagereward_check)
             st.session_state.my_index = int(st.session_state["df"].iloc[0].name)
 
         else:
             # Show a message when no directory is selected
             st.warning("Please select at least one directory")
             st.stop()
+    else:
+        if hasattr(st.session_state, 'original_directory') and st.session_state.original_directory:
+            st.session_state.directory = st.session_state.original_directory
+            st.session_state.df = st.session_state.original_df.copy()
+
 
     if st.button("Reset cache"):
         helper.reset_cached_images()
@@ -103,12 +106,14 @@ with main_container:
     if st.button("Reset filter"):
         if "db_updated" not in st.session_state:
             st.session_state["df"] = st.session_state.original_df.copy()
+            st.session_state.directory = st.session_state.original_directory
         else:
             helper.set_directory(imagereward=st.session_state.imagereward_check)
             del st.session_state["db_updated"]
             del st.session_state["original_df"]
         st.session_state.my_index = 0
     st.info(f"Current directory: {st.session_state.directory}")
+    st.dataframe(st.session_state.df)
 
 if st.session_state["df"].empty:
     st.warning("Enter a directory to view images, current view is empty.")
