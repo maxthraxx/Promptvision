@@ -44,7 +44,12 @@ class ImageRewardEngine:
         import torch
 
         with torch.no_grad():
-            score = self.model.score(positive_prompt, image)
+            logger.debug(positive_prompt)
+            if positive_prompt:
+                score = self.model.score(positive_prompt, image)
+            else:
+                score = 0.0
+        
         return round(score, 3)
 
 
@@ -206,7 +211,7 @@ def process_directory(directory=None, imagereward=None, cleanup=None):
 
     images.update(new_images)
     images.update(existing_images)
-    logger.debug(f"Images before creating df: {images}")
+    logger.debug(f"Images before creating df: {len(images)}")
 
     # Check if any of the values are NA or inf
     for imghash, image_info in images.items():
@@ -277,7 +282,6 @@ def delete_images_and_cache(df):
         cache.unlink()
 
 
-# Define the filter_dataframe function (modified from the blog post)
 def filter_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     """Adds a UI on top of a dataframe to let viewers filter columns
 
@@ -292,19 +296,24 @@ def filter_dataframe(df: pd.DataFrame) -> pd.DataFrame:
         return df
 
     df = df.copy()
-    # Try to convert datetimes into a standard format (datetime, no timezone)
     to_filter_columns = st.multiselect("Filter dataframe on", df.columns)
+    
     for column in to_filter_columns:
         _, right = st.columns((1, 20))
+        
         if is_numeric_dtype(df[column]):
-            # Check if the score column has a constant value
             if df[column].nunique() == 1:
-                # Use a text input instead of a slider
+                # Use a text input instead of a slider for constant values
                 user_num_input = right.text_input(
                     f"Value for {column}",
                     value=df[column].iloc[0],  # Use the constant value as default
                 )
-                df = df[df[column] == user_num_input]
+                # Convert user input to the numeric type of the column
+                user_num_input = pd.to_numeric(user_num_input, errors="coerce")
+                
+                # Filter only if the user input is a valid number
+                if not pd.isnull(user_num_input):
+                    df = df[df[column] == user_num_input]
             else:
                 # Use a slider with a non-zero step
                 _min = float(df[column].min())
@@ -318,6 +327,7 @@ def filter_dataframe(df: pd.DataFrame) -> pd.DataFrame:
                     step=step,
                 )
                 df = df[df[column].between(*user_num_input)]
+        
         elif is_datetime64_any_dtype(df[column]):
             user_date_input = right.date_input(
                 f"Values for {column}",
@@ -330,8 +340,8 @@ def filter_dataframe(df: pd.DataFrame) -> pd.DataFrame:
                 user_date_input = tuple(map(pd.to_datetime, user_date_input))
                 start_date, end_date = user_date_input
                 df = df.loc[df[column].between(start_date, end_date)]
+        
         else:
-            # Use regex text search for these columns
             if column in ["positive_prompt", "negative_prompt", "metadata"]:
                 user_text_input = right.text_input(
                     f"Regex in {column}",

@@ -48,15 +48,15 @@ with main_container:
                 helper.set_directory(imagereward=st.session_state.imagereward_check)
             else:
                 helper.set_directory(imagereward=st.session_state.imagereward_check)
+            st.session_state.my_index = 0
 
     if st.checkbox("Filter dataset"):
         # Define the filter_dataframe function (modified from the blog post)
         if "original_df" not in st.session_state:
             st.session_state.original_df = st.session_state["df"].copy()
-        else:
-            st.session_state.original_df = st.session_state["df"].copy()
 
-        st.session_state["df"] = pvision.filter_dataframe(st.session_state["df"])
+        st.session_state["df"] = pvision.filter_dataframe(st.session_state.original_df)
+        st.session_state.my_index = 0
 
     # Add a checkbox to enable directory filter
     filter_by_dir = st.checkbox("Change sub folder")
@@ -99,14 +99,17 @@ with main_container:
 
     if st.button("Reset cache"):
         helper.reset_cached_images()
+        st.session_state.my_index = 0
     if st.button("Reset filter"):
-        st.session_state["df"] = st.session_state.original_df.copy()
-
-    st.write(f"Current directory: {st.session_state.directory}")
+        if "db_updated" not in st.session_state:
+            st.session_state["df"] = st.session_state.original_df.copy()
+        else:
+            helper.set_directory(imagereward=st.session_state.imagereward_check)
+            del st.session_state["db_updated"]
+            del st.session_state["original_df"]
+        st.session_state.my_index = 0
+    st.info(f"Current directory: {st.session_state.directory}")
 
 if st.session_state["df"].empty:
     st.warning("Enter a directory to view images, current view is empty.")
     st.stop()
-
-if "original_df" in st.session_state:
-    st.write(st.session_state.original_df)

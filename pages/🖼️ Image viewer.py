@@ -18,6 +18,7 @@ def set_new_df_value(key, value):
     st.session_state["df"].loc[st.session_state.my_index, key] = value
     pvision.save_df_from_streamlit(st.session_state.directory, st.session_state.df)
     helper.store_metadata_in_session(st.session_state.my_index)
+    st.session_state["db_updated"] = True
 
 
 def favorite_render_false():
