@@ -1,12 +1,6 @@
-streamlit
-sd-parsers
-image-reward
-gensim
-streamlit_extras
-streamlit-image-select
+customtkinter
 Pillow
-ftfy 
-tqdm
-regex
-wordcloud
-git+https://github.com/openai/CLIP.git
+pandas
+pyperclip
+watchdog
+pypng
