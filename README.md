@@ -28,6 +28,21 @@ Promptvision is a powerful and user-friendly image viewer application built with
 ```
    
 
+3. For Linux users, install tkinter:
+
+    On Ubuntu or Debian-based systems:
+    ```
+    sudo apt-get install python3-tk
+    ```
+    On Fedora or Red Hat-based systems:
+    ```
+    sudo dnf install python3-tkinter
+    ```
+    On Arch Linux:
+    ```
+    sudo pacman -S tk
+    ```
+
 ## Usage
 
 To run Promptvision, execute the following command in the project directory:
