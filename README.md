@@ -72,7 +72,7 @@ Customize your Promptvision experience with the settings panel:
 
 ![Settings Panel](promo_images/settings.png)
 
-## Gallery Fullscreen
+## Gallery
 
 ![Gallery on WSL2](promo_images/gallery%20wsl2.png)
 (WSL2 on Windows 10)
