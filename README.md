@@ -59,6 +59,25 @@ To run Promptvision, execute the following command in the project directory:
 - Right Arrow / 'D': Next image
 - 'F': Toggle favorite status of the current image
 
+## Image viewer
+
+![Image Viewer](promo_images/image%20viewer.png)
+
+![Ubuntu Bash on WSL2](promo_images/ubuntu%20bash%20wsl2.png)
+(WSL2 on Windows 10)
+
+## Settings
+
+Customize your Promptvision experience with the settings panel:
+
+![Settings Panel](promo_images/settings.png)
+
+## Gallery Fullscreen
+
+![Gallery on WSL2](promo_images/gallery%20wsl2.png)
+(WSL2 on Windows 10)
+
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
